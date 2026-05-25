@@ -1,13 +1,19 @@
-use std::{collections::HashMap, sync::RwLock, sync::Arc};
+use std::{collections::HashMap, io, sync::{Arc, RwLock}};
+use crate::wal::writer::WalLog;
+
 use super::KvStore;
 
 pub struct ArcRwLockKvStore {
-    data: Arc<RwLock<HashMap<String, String>>>
+    data: Arc<RwLock<HashMap<String, String>>>,
+    wal_log: WalLog
 }
 
 impl ArcRwLockKvStore {
-    fn new() -> Self {
-        Self { data: Arc::new(RwLock::new(HashMap::new())) }
+    fn new() -> io::Result<Self> {
+        Ok(Self { 
+            data: Arc::new(RwLock::new(HashMap::new())),
+            wal_log: WalLog::new("/tmp/log/wal_log")?
+        })
     }
 }
 
