@@ -56,6 +56,14 @@ impl WalLog {
 
         Ok(map)
     }
+
+    pub fn get_byte_pos(&self, offset: u64) -> Option<&u64> {
+        self.index.get(&offset)
+    }
+
+    pub fn get_entries(&mut self, offset: u64) -> io::Result<Vec<WalEntry>> {
+        self.read(offset)
+    }
 }
 
 impl Wal for WalLog {

@@ -5,19 +5,23 @@ use super::KvStore;
 
 pub struct ArcRwLockKvStore {
     data: Arc<RwLock<HashMap<String, String>>>,
-    wal_log: WalLog
+    pub wal_log: WalLog
 }
 
 impl ArcRwLockKvStore {
-    fn new() -> io::Result<Self> {
+    pub fn new() -> io::Result<Self> {
         Ok(Self { 
             data: Arc::new(RwLock::new(HashMap::new())),
             wal_log: WalLog::new("/tmp/log/wal_log")?
         })
     }
+
+    pub fn get_byte_pos(&self, offset: u64) -> Option<&u64> {
+        self.wal_log.get_byte_pos(offset)
+    }
 }
 
-impl KvStore for ArcRwLockKvStore {
+impl KvStore for ArcRwLockKvStore { // implement writing to WAL first and then writing to kv store
     fn get(&self, key: &str) -> Option<String> {
         let read_guard = self.data.read().unwrap();
         return read_guard.get(key).cloned();
