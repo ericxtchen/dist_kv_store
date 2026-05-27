@@ -1,6 +1,6 @@
 use std::io::{self, Error};
 
-use crate::{replication::{FollowerRole, NodeCore, NodeHandler, ReplicationMessage}, wal::Wal};
+use crate::{replication::{FollowerRole, NodeCore, NodeHandler, ReplicationMessage, OutboundEvent, NodeStatusMessage}, wal::Wal};
 
 impl NodeHandler for FollowerRole {
     fn on_message(&mut self, message: super::ReplicationMessage, core: &mut NodeCore) -> Result<Option<ReplicationMessage>, io::Error> {
@@ -22,7 +22,14 @@ impl NodeHandler for FollowerRole {
         }
     }
 
-    fn on_tick(&mut self, core: &mut NodeCore) -> Result<Option<Vec<super::ReplicationMessage>>, io::Error> {
+    fn on_tick(&mut self, core: &mut NodeCore) -> Result<Option<Vec<super::OutboundEvent>>, io::Error> {
         // if heartbeat timer drops to zero, send a LeaderFailed and trigger failover
+            if self.heartbeat_timed_out() {
+            let event = OutboundEvent::ToController(
+                NodeStatusMessage::LeaderFailed { leader_id: self.leader_id.unwrap() }
+            );
+            return Ok(Some(vec![event]));
+        }
+        Ok(None)
     }
 }
